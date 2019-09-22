@@ -33,8 +33,12 @@ class Genetic_cross_breeding(NN_performace_estimation):
         в нейронах будет заменён произвольным в интервале -1:1)
         и количество мутированных нейросетей которые будут сгенерированы в каждом цикле
         """
-        breed_methods = {"breed_random_binary": self._breed_random_binary}
-        selection_methods = {"weighted_selection": self._weighted_selection}
+        breed_methods = {"breed_random_binary": self._breed_random_binary,
+                         "breed_random_K_nary": self._breed_random_K_nary,
+                         "breed_hyperangulate":self._breed_hyperangulate,
+                         "breed_binary_cross_sect": self._breed_binary_cross_sect}
+        selection_methods = {"weighted_selection": self._weighted_selection,
+                             "deviant_selection":self._deviant_selection}
         self._n_cycles = n_cycles
         self._n_initial_NNs = n_initial_NNs
         self._n_children = n_children
@@ -43,9 +47,7 @@ class Genetic_cross_breeding(NN_performace_estimation):
         self._mutagenity = mutagenity
         self._n_mutants = n_mutants
         
-        """
-        собрали метапараметры, но это пока что недоделанный фрагмент!!!!
-        """
+
         super().__init__(loss_func = loss_func, act_func = act_func, n_vectors = n_vectors,
                          n_neurons = n_neurons, n_in = n_in, n_out = n_out, with_bias = with_bias
                          )
@@ -61,24 +63,93 @@ class Genetic_cross_breeding(NN_performace_estimation):
         """
         c этими двумя списками в основном и будут работать встроенные методы
         """
-    def _weighted_selection (self):
+    def _weighted_selection (self, k_parents):
         """
-        один из методов отбора родителей - пропорционально их оценке
+        один из методов отбора родителей - пропорционально их оценке, пожалуй самый банальный
         """
-        [parent_a,parent_b] = random.choices (self._children, weights = self._evaluation, k=2)        
-        return parent_a, parent_b
+        parents = random.choices (self._children, weights = self._evaluation, k=k_parents)        
+        return parents
+    
+    def _deviant_selection (self, k_parents):
+        """
+        ВМЕСТО ДОКСТРИНГА тут будет рефлексия:
+        поговаривают, что в эволюционных алгоритмах главная проблема - разнообразие решений
+        а точнее: главная фишка - в разнообразии решений, и эту фишку мягко говоря легко 
+        потерять. Конечно можно ждать когда мутация сгенерирует подходящего мутанта... 
+        но прямо скажем, это не самый здравый подход.
+        Хотя я пока слабо понимаю, как сделать имитацию отжига (это обязательно нужно в будущем, т.к.
+        это единственный скоростной вариант из самых попсовых)
+        ничего не мешает мне сотворить свой вариант отбора родителей. Вес будет пропорционален
+        среднеквадратичному расстоянию
+        """
+        parents = []
+        [parent_a] = random.choices(self._children, weights = self._evaluation, k = 1)
+        parents.append(parent_a)
+        deviant_weights = []
+        current_point_weight_average = parent_a
+        for n_parent in range(1,k_parents):
+            deviant_weights = []
+            for mb_parent in self._children:
+                deviant_weight = sum ([(w1-w2)**2 for w1, w2 in zip (current_point_weight_average,mb_parent)])
+                deviant_weights.append(deviant_weight)
+            [parent_additional] = random.choices(self._children, weights = deviant_weights, k = 1)
+            current_point_weight_average = [w_avg*(n_parent-1)/n_parent + w_add/n_parent 
+                                            for w_avg,w_add in zip (current_point_weight_average,parent_additional)]
+            parents.append(parent_additional)
+        return parents
     
     def _breed_random_binary (self):
         """
-        один из методов скрещивания - произвольный выбор весов из родителя 1 или родителя 2
+        самый распространённый, самый банальный метод скрещивания - произвольный выбор весов из родителя 1 или родителя 2
         """
         self._new_children = []
         for breeds in range(self._n_children//2):
-            parent_a,parent_b = self._selection_method() 
+            parent_a,parent_b = self._selection_method(2) 
             child_1 = [random.choice (weights) for weights in zip (parent_a,parent_b)]
             child_2 = [random.choice (weights) for weights in zip (parent_a,parent_b)]
             self._new_children.append (child_1)
             self._new_children.append (child_2)
+        return
+    
+    def _breed_binary_cross_sect (self):
+        self._new_children = []
+        for breeds in range(self._n_children//2):
+            parent_a,parent_b = self._selection_method(2)
+            deliminator = random.choice (range (len (parent_a)))
+            child_1 = parent_a [:deliminator]+parent_b [deliminator:]
+            child_2 = parent_b [:deliminator]+parent_a [deliminator:]
+            self._new_children.append (child_1)
+            self._new_children.append (child_2)
+        return
+    
+    def _breed_random_K_nary (self):
+        """
+        один из методов скрещивания - произвольный выбор весов из k родителей, где k рандомное
+        целое число от 2 до 10, посмотрим - может так быстрее сходится?
+        """
+        self._new_children = []
+        for breeds in range(self._n_children//5+1):
+            k_parents = random.randint (2,10)
+            parents = self._selection_method(k_parents) 
+            for child in range(k_parents):
+                new_child = [random.choice (weights) for weights in zip(*parents)]
+                self._new_children.append (new_child)
+        return
+    
+    def _breed_hyperangulate (self):
+        """
+        по идее этот метод должен очень быстро сходится в какой-нибудь локальный минимум, т.к.
+        по сути каждый раз мы ищем среднее между несколькими нейросетями. Эдакий аналог триангуляции
+        """
+        self._new_children = []
+        
+        for breeds in range(self._n_children//2):
+            k_parents = random.randint (2,10)
+            parents = self._selection_method(k_parents) 
+            child = []
+            for weights in zip (*parents):
+                child. append (sum (weights)/k_parents)
+            self._new_children.append (child)
         return
     
     def _mutate (self):
