@@ -123,7 +123,7 @@ class Genetic_cross_breeding(NN_performace_estimation):
             super().build_random_NN ()
             self._children.append(super().write())
         for random_initial_NN in self._children:
-            estimation = super()._loss_function(NN=random_initial_NN)
+            estimation = 1/super()._loss_function(NN=random_initial_NN)
             self._evaluation.append(estimation)
         assert(len(self._evaluation) == len(self._children))
         return
