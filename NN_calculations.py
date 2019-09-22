@@ -6,7 +6,7 @@ Created on Sat Sep 14 13:07:14 2019
 """
 from NN_initialize import Neural_Network
 import random
-from math import exp
+from math import exp, log
 
 class Neural_answer(Neural_Network):
     """
@@ -30,7 +30,8 @@ class Neural_answer(Neural_Network):
                             "leaky_relu": self._leaky_relu,
                             "sigmoid": self._sigmoid,
                             "binary": self._binary,
-                            "tanh": self._tanh                       
+                            "tanh": self._tanh,
+                            "softplus": self._softplus
                             }
         self._activation_function = act_func_types[act_func]
         super().__init__(n_neurons = n_neurons, n_in = n_in, n_out = n_out,
@@ -44,7 +45,7 @@ class Neural_answer(Neural_Network):
         return output
     
     def _elu(self, output):
-        output = [x if x> 0 else 0.01*(exp(x)-1)]
+        output = [x if x> 0 else 0.01*(exp(x)-1) for x in output]
         return output
     
     def _leaky_relu (self, output):
@@ -157,11 +158,10 @@ class NN_performace_estimation(Neural_answer):
         среднее отклонение по модулю разности, используется только для тренировочного набора
         """
         abs_error = 0
-        vector_numbers
         for number in numbers_of_vectors_chosen:
-            correct_one_hot_encoded_answer = [0 if n_answer != self._y_train[number] else 1 for n_answer in range(self.n_labels) ]
+            correct_one_hot_encoded_answer = [0 if n_answer != self._y_train[number] else 1 for n_answer in range(self.n_out) ]
             nn_answer = self.calc_output(self._x_train[number])
-            abs_error += sum([abs(val2-val1) for val1, val2 in zip(nn_answer,correct_one_hot_encoded_answer)])/self.n_labels
+            abs_error += sum([abs(val2-val1) for val1, val2 in zip(nn_answer,correct_one_hot_encoded_answer)])/self.n_out
         mean_abs_error = abs_error / self._n_vectors
         return mean_abs_error
     
@@ -171,9 +171,9 @@ class NN_performace_estimation(Neural_answer):
         """
         sq_error = 0
         for number in numbers_of_vectors_chosen:
-            correct_one_hot_encoded_answer = [0 if n_answer != self._y_train[number] else 1 for n_answer in range(super().n_out) ]
+            correct_one_hot_encoded_answer = [0 if n_answer != self._y_train[number] else 1 for n_answer in range(self.n_out) ]
             nn_answer = self.calc_output(self._x_train[number])
-            sq_error += sum([(val2-val1)**2 for val1, val2 in zip(nn_answer,correct_one_hot_encoded_answer)])/super().n_out
+            sq_error += sum([(val2-val1)**2 for val1, val2 in zip(nn_answer,correct_one_hot_encoded_answer)])/self.n_out
         mean_sq_error = sq_error / self._n_vectors
         return mean_sq_error
     
