@@ -97,3 +97,19 @@ NN_struct_and_data.evolve_NNs(n_cycles = 10,n_children = 15,
                               progress_view = True, n_neurons = [2,3])
 
 print(NN_struct_and_data.NNs_evaluated())
+
+NN_struct_and_data = NN_dataset_solver(iris_x,iris_y)
+NN_struct_and_data.evolve_NNs(n_cycles = 10,n_children = 15,
+                              n_vectors = 20, loss_func = "MAE",act_func = "relu",
+                              breed_method = "breed_binary_summ", selection_method = "deviant_selection",
+                              progress_view = True, n_neurons = [2,3])
+
+print(NN_struct_and_data.NNs_evaluated())
+
+NN_struct_and_data = NN_dataset_solver(iris_x,iris_y)
+NN_struct_and_data.evolve_NNs(n_cycles = 10,n_children = 15,
+                              n_vectors = 20, loss_func = "MAE",act_func = "relu",
+                              breed_method = "breed_binary_summ", selection_method = "weighted_selection",
+                              progress_view = True, n_neurons = [2,3])
+
+print(NN_struct_and_data.NNs_evaluated())

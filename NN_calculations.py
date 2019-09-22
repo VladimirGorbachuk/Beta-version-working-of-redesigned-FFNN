@@ -153,14 +153,33 @@ class NN_performace_estimation(Neural_answer):
         numbers_of_vectors_chosen = self.numbers_of_n_vectors_chosen()
         return self._loss_function_type(numbers_of_vectors_chosen)
     
+    def _NN_answers_and_real_labels(self, numbers_of_vectors_chosen = None):
+        """
+        вынес эту часть чтобы сделать более глубокий и удобный оверрайд
+        это самое долгое- определить ответы которые даст отдельно взятая нейросеть
+        поэтому я хочу их сгруппировать, чтобы их было легче перебить в формат
+        умножения массивов нампи (где первый массив - сразу все нужные векторы)
+        и уж тем более (за счёт распараллеливания) это нужно в tensorflow
+        """
+        
+        nn_answers = []
+        labels = []
+        for number in numbers_of_vectors_chosen:
+            correct_one_hot_encoded_answer = [0 if n_answer != self._y_train[number] else 1 for n_answer in range(self.n_out) ]
+            nn_answer = self.calc_output(self._x_train[number])
+            nn_answers.append(nn_answer)
+            labels.append(correct_one_hot_encoded_answer)
+        return nn_answers, labels
+    
     def mean_abs_error (self,  numbers_of_vectors_chosen = None):
         """
         среднее отклонение по модулю разности, используется только для тренировочного набора
         """
         abs_error = 0
-        for number in numbers_of_vectors_chosen:
-            correct_one_hot_encoded_answer = [0 if n_answer != self._y_train[number] else 1 for n_answer in range(self.n_out) ]
-            nn_answer = self.calc_output(self._x_train[number])
+        nn_answers, labels = self._NN_answers_and_real_labels(numbers_of_vectors_chosen)
+        for answer_label_pair_index in range(len(numbers_of_vectors_chosen)):
+            correct_one_hot_encoded_answer = labels[answer_label_pair_index]
+            nn_answer = nn_answers[answer_label_pair_index]
             abs_error += sum([abs(val2-val1) for val1, val2 in zip(nn_answer,correct_one_hot_encoded_answer)])/self.n_out
         mean_abs_error = abs_error / self._n_vectors
         return mean_abs_error
@@ -170,9 +189,10 @@ class NN_performace_estimation(Neural_answer):
         среднее отклонение по квадрату разности, используется только для тренировочного набора
         """
         sq_error = 0
-        for number in numbers_of_vectors_chosen:
-            correct_one_hot_encoded_answer = [0 if n_answer != self._y_train[number] else 1 for n_answer in range(self.n_out) ]
-            nn_answer = self.calc_output(self._x_train[number])
+        nn_answers, labels = self._NN_answers_and_real_labels(numbers_of_vectors_chosen)
+        for answer_label_pair_index in range(len(numbers_of_vectors_chosen)):
+            correct_one_hot_encoded_answer = labels[answer_label_pair_index]
+            nn_answer = nn_answers[answer_label_pair_index]
             sq_error += sum([(val2-val1)**2 for val1, val2 in zip(nn_answer,correct_one_hot_encoded_answer)])/self.n_out
         mean_sq_error = sq_error / self._n_vectors
         return mean_sq_error
@@ -186,12 +206,13 @@ class NN_performace_estimation(Neural_answer):
         abs_error = 0
         total_guesses = 0
         correct_guesses = 0
-        for number in numbers_of_vectors_chosen:
+        nn_answers, labels = self._NN_answers_and_real_labels(numbers_of_vectors_chosen)
+        for answer_label_pair_index in range(len(numbers_of_vectors_chosen)):
+            correct_one_hot_encoded_answer = labels[answer_label_pair_index]
+            nn_answer = nn_answers[answer_label_pair_index]
             total_guesses += 1
-            correct_one_hot_encoded_answer = [0 if n_answer != self._y_train[number] else 1 for n_answer in range(self.n_out) ]
-            nn_answer = self.calc_output(self._x_train[number])
             abs_error += sum([abs(val2-val1) for val1, val2 in zip(nn_answer,correct_one_hot_encoded_answer)])/self.n_out
-            if nn_answer.index(max(nn_answer)) == self._y_train[number]:
+            if nn_answer.index(max(nn_answer)) == self._y_train[answer_label_pair_index ]:
                 correct_guesses += 1
         mean_abs_error = abs_error / self._n_vectors
         return mean_abs_error*total_guesses/(correct_guesses+1)   

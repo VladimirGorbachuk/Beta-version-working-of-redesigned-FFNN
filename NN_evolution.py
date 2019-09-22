@@ -36,7 +36,8 @@ class Genetic_cross_breeding(NN_performace_estimation):
         breed_methods = {"breed_random_binary": self._breed_random_binary,
                          "breed_random_K_nary": self._breed_random_K_nary,
                          "breed_hyperangulate":self._breed_hyperangulate,
-                         "breed_binary_cross_sect": self._breed_binary_cross_sect}
+                         "breed_binary_cross_sect": self._breed_binary_cross_sect,
+                         "breed_binary_summ":self._breed_binary_summ}
         selection_methods = {"weighted_selection": self._weighted_selection,
                              "deviant_selection":self._deviant_selection}
         self._n_cycles = n_cycles
@@ -118,6 +119,17 @@ class Genetic_cross_breeding(NN_performace_estimation):
             deliminator = random.choice (range (len (parent_a)))
             child_1 = parent_a [:deliminator]+parent_b [deliminator:]
             child_2 = parent_b [:deliminator]+parent_a [deliminator:]
+            self._new_children.append (child_1)
+            self._new_children.append (child_2)
+        return
+    
+    def _breed_binary_summ (self):
+        self._new_children = []
+        for breeds in range(self._n_children//2):
+            parent_a,parent_b = self._selection_method(2)
+            multiplier = random.random()
+            child_1 = [w1*multiplier+w2*(1-multiplier) for w1,w2 in zip(parent_a,parent_b)]
+            child_2 = [w2*multiplier+w1*(1-multiplier) for w1,w2 in zip(parent_a,parent_b)]
             self._new_children.append (child_1)
             self._new_children.append (child_2)
         return
