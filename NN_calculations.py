@@ -77,7 +77,8 @@ class Neural_answer(Neural_Network):
         (позже нужно будет сюда пилить альтернативу на нумпае)
         """
         if self.with_bias and layer_number < self.layers:
-            input = [1]+input
+            input = list (input)
+            input.insert (0,1)
         output = []
         for neuron in self.weights[layer_number]:
             product = 0
