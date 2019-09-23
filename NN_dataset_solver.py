@@ -6,11 +6,9 @@ Created on Sat Sep 14 22:05:56 2019
 """
 #from NN_initialize import Neural_Network
 #from NN_calculations import Neural_answer, NN_performace_estimation
+#import random
+
 from NN_evolution import Genetic_cross_breeding
-
-
-import random
-
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler #OneHotEncoder пока не юзаем
  
@@ -104,7 +102,7 @@ class NN_dataset_solver(Genetic_cross_breeding):
         self._new_NNs = super().generate()
         self._evaluated_by_test_set_new_NNs = []
         for chosen_NN in self._new_NNs:
-            self._evaluated_by_test_set_new_NNs.append(super().guess_rate_test(NN=chosen_NN))
+            self._evaluated_by_test_set_new_NNs.append(self.guess_rate_test(NN=chosen_NN))
         if self.progress_view:
             print(self._evaluated_by_test_set_new_NNs)
         return

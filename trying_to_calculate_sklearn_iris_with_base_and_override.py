@@ -29,23 +29,23 @@ iris_y = iris["target"]
 random.seed(5)
 NN_struct_and_data = NN_dataset_solver(iris_x,iris_y)
 NN_struct_and_data.evolve_NNs(n_cycles = 1000,n_children = 15,
-                              n_vectors = 100, loss_func = "hybrid",act_func = "relu",
+                              n_vectors = 50, loss_func = "hybrid",act_func = "relu",
                               progress_view = False, n_neurons = [4,3])
 
 print(NN_struct_and_data.NNs_evaluated())
 #print(NN_struct_and_data.NNs())
 random.seed(5)
-NN_struct_and_data = NN_numpified_DS_solver(digits_x,digits_y)
+NN_struct_and_data = NN_numpified_DS_solver(iris_x,iris_y)
 NN_struct_and_data.evolve_NNs(n_cycles = 1000,n_children = 15,
-                              n_vectors = 100, loss_func = "hybrid",act_func = "relu",
+                              n_vectors = 50, loss_func = "hybrid",act_func = "relu",
                               progress_view = False, n_neurons = [4,3])
 
 print(NN_struct_and_data.NNs_evaluated())
 
 random.seed(5)
-NN_struct_and_data = NN_deeper_numpified_DS_solver(digits_x,digits_y)
+NN_struct_and_data = NN_deeper_numpified_DS_solver(iris_x,iris_y)
 NN_struct_and_data.evolve_NNs(n_cycles = 1000,n_children = 15,
-                              n_vectors = 100, loss_func = "hybrid",act_func = "relu",
+                              n_vectors = 50, loss_func = "hybrid",act_func = "relu",
                               progress_view = False, n_neurons = [4,3])
 
 print(NN_struct_and_data.NNs_evaluated())

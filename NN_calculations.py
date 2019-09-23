@@ -137,9 +137,10 @@ class NN_performace_estimation(Neural_answer):
                                  "hybrid": self.hybrid_MAE_GR}
         self._loss_function_type = self._loss_function_types[loss_func]
         self._n_vectors = n_vectors
+        
     def numbers_of_n_vectors_chosen(self):
         """
-        этот метод выбирает те вектора, для которых будет проводиться оценка нейросети
+        этот метод выбирает те векторы, для которых будет проводиться оценка нейросети
         количество векторов равно self._n_vectors
         """
         numbers_of_vectors_chosen = random.choices(range(len(self._x_train)), k = self._n_vectors)

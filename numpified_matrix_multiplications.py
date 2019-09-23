@@ -45,34 +45,29 @@ class NN_deeper_numpified_DS_solver(NN_dataset_solver):
         самый простой вариант перемножения матриц с биасом 
         (позже нужно будет сюда пилить альтернативу на нумпае)
         """
-        input = list(input)
-        input_biased = []
-        for added_vector in input:
-            if self.with_bias and layer_number < self.layers:    
-                added_vector.insert(0,1)
-                input_biased.append(added_vector)
-            else:
-                input_biased.append(added_vector)
+        if self.with_bias and layer_number < self.layers:    
+            input = np.c_[np.ones(len(input)),input]
         matrix_of_neurons = []
         for neuron in self.weights[layer_number]:
             matrix_of_neurons.append(*neuron)
         matrix = np.asarray(matrix_of_neurons)
-        input_biased = np.asarray(input_biased)
-        output = input_biased@matrix.T
+        output = input@matrix.T
         answer = []
         for single_answer in output:
             answer.append(self._activation_function(single_answer))
         return answer
     
-    def calc_output (self,numbers_of_vectors_chosen):
+    def calc_output (self,numbers_of_vectors_chosen = None, test = False):
         """
         рассчитываем числа, которые выдаёт нейросеть для данного input (одномерного вектора)
         если в виде одной строки нейросеть, то используем наследованную функцию self.read()
         """
         input = []
-        for number in numbers_of_vectors_chosen:
-            added_vector = list(self._x_train[number])
-            input.append(added_vector)
+        if test:
+            input = self._x_test
+        else:
+            for number in numbers_of_vectors_chosen:
+                input.append(self._x_train[number])
         for layer_number in range (self.layers):
             input = self._matrix_mult_act_func (input,layer_number = layer_number)       
         return input
@@ -90,6 +85,23 @@ class NN_deeper_numpified_DS_solver(NN_dataset_solver):
         labels = []
         for number in numbers_of_vectors_chosen:
             correct_one_hot_encoded_answer = [0 if n_answer != self._y_train[number] else 1
-                                              for n_answer in range(self.n_out) ]
+                                              for n_answer in range(self.n_out)]
             labels.append(correct_one_hot_encoded_answer)
         return nn_answers, labels
+    
+    def guess_rate_test(self, NN=None):
+        """
+        класс не изменён кроме обращений к nn_answer заменённыз 
+        доля отгаданных верных ответов (1 соответствует 100% верно отгаданных ответов)
+        этот метод используется только для тестового набора (целиком)
+        """
+        super().read(NN)
+        correct_guesses = 0
+        total_guesses = 0
+        nn_answers = self.calc_output(numbers_of_vectors_chosen = None, test = True)
+        for number in range(len(self._x_test)):
+            if nn_answers[number].index(max(nn_answers[number])) == self._y_test[number]:
+                correct_guesses += 1
+            total_guesses +=1
+        return correct_guesses / total_guesses
+    
