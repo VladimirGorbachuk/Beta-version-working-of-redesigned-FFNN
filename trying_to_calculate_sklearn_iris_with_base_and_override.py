@@ -19,7 +19,7 @@ Created on Mon Sep 16 17:31:24 2019
 @author: Vovan-i-Venera
 """
 import random                                                                     
-from numpified_matrix_multiplications import NN_numpified_DS_solver, NN_deeper_numpified_DS_solver, Deeper_Tensorflowed
+from NN_override_np_tf import NN_numpified_DS_solver, NN_deeper_numpified_DS_solver, Deeper_Tensorflowed
 from NN_dataset_solver import NN_dataset_solver
 from sklearn.datasets import load_iris
 iris = load_iris()
