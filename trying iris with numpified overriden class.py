@@ -11,7 +11,7 @@ Created on Mon Sep 16 17:31:24 2019
 
 @author: Vovan-i-Venera
 """
-from numpified_matrix_multiplications import NN_numpified_DS_solver
+from NN_override_np_tf import NN_numpified_DS_solver
 from sklearn.datasets import load_iris
 iris = load_iris()
 iris_x = iris["data"]
