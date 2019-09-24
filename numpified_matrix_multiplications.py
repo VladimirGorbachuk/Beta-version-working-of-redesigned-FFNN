@@ -7,6 +7,8 @@ Created on Sun Sep 22 15:19:17 2019
 
 from NN_dataset_solver import NN_dataset_solver
 import numpy as np
+import tensorflow as tf
+
 class NN_numpified_DS_solver(NN_dataset_solver):
     """
     наследует от самого крайнего класса, должен
@@ -31,6 +33,7 @@ class NN_numpified_DS_solver(NN_dataset_solver):
         return self._activation_function(output)
     
 class NN_deeper_numpified_DS_solver(NN_dataset_solver):
+    
     """
     наследует от самого крайнего класса, должен
     оверрайднуть сразу три метода:
@@ -40,6 +43,7 @@ class NN_deeper_numpified_DS_solver(NN_dataset_solver):
     зачем это всё? чтобы заменить перемножением матрицы всех рандомных векторов на 
     матрицу отдельновзятой нейросети!
     """
+
     def _matrix_mult_act_func (self,input,layer_number = None):
         """
         самый простой вариант перемножения матриц с биасом 
@@ -104,4 +108,67 @@ class NN_deeper_numpified_DS_solver(NN_dataset_solver):
                 correct_guesses += 1
             total_guesses +=1
         return correct_guesses / total_guesses
+
+class Deeper_Tensorflowed(NN_deeper_numpified_DS_solver):
+    """
+    в tensorflow свои функции активации... пока что добавил только relu, 
+    т.к. ещё не оверрайднул словарь
+    """
     
+    """
+    в классе переведённом в формат нампай нужно оверрайднуть только операцию
+    перемножения матриц и применения функций активации. То есть, нужно сделать пошаговый алгоритм.
+    """
+    def __init__(self, *args):
+        super().__init__(*args)
+        self._x_train = np.asarray(self._x_train,dtype = np.float32)
+        self._x_test = np.asarray(self._x_test,dtype = np.float32,)
+    def _matrix_mult_act_func (self,input):
+        """
+        самый простой вариант перемножения матриц с биасом 
+        (позже нужно будет сюда пилить альтернативу на нумпае)
+        """
+        input = np.asarray(input, dtype=np.float32)
+        input = tf.convert_to_tensor(input, dtype=tf.float32)
+        ubermatrix_of_neurons = self.neuron_layers_matrices()
+        for number_of_layer,matrix in enumerate(ubermatrix_of_neurons):
+            if number_of_layer < (len(ubermatrix_of_neurons)) and self.with_bias:
+                bias = tf.constant(1,dtype = tf.float32)[None, None]
+                bias = tf.tile(bias, [tf.shape(input)[0], 1])  # Repeat rows. Shape=(tf.shape(a)[0], 1)
+                input = tf.concat([bias,input], axis=1)
+            """
+            with tf.Session() as sess: # ПРОВЕРКА!
+                    input = sess.run(input)#
+                    print("да что тут...",input)#
+                    matrix = sess.run(matrix)
+                    print("а тут?", matrix)
+            """
+            output = tf.matmul(input,matrix,transpose_b=True)
+            input = tf.nn.relu(output)      
+        with tf.Session() as sess:
+            answer = sess.run(input)
+        return answer
+    ###вот тут что ли нужен этот декоратор....
+    def neuron_layers_matrices (self):
+        uber_matrix = []
+        for layer_number in range(self.layers):
+            matrix_of_neurons = []
+            for neuron in self.weights[layer_number]:
+                matrix_of_neurons.append(*neuron)
+            matrix_of_neurons = tf.convert_to_tensor(matrix_of_neurons, dtype=tf.float32)
+            uber_matrix.append(matrix_of_neurons)
+        return uber_matrix
+    
+    def calc_output (self,numbers_of_vectors_chosen = None, test = False):
+        """
+        рассчитываем числа, которые выдаёт нейросеть для данного input (одномерного вектора)
+        если в виде одной строки нейросеть, то используем наследованную функцию self.read()
+        """
+        input = []
+        if test:
+            input = self._x_test
+        else:
+            for number in numbers_of_vectors_chosen:
+                input.append(self._x_train[number])
+        output = self._matrix_mult_act_func(input)     
+        return [list(part_of_output) for part_of_output in output]

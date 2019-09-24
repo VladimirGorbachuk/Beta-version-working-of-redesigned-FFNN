@@ -12,7 +12,7 @@ Created on Thu Sep 12 23:04:14 2019
 @author: Vovan-i-Venera
 """
 
-import random
+import random #один раз импортировали и хватит, тут надо где-то выставлять 
 from collections import namedtuple
 from functools import partial
 Neuron = namedtuple ("Neuron", ["weights"])
